@@ -11,7 +11,11 @@
 
     SubShader {
         
-        Tags { "RenderType"="Transparent" "Queue"="Transparent" }
+        Tags 
+        { 
+        	"RenderType"="Transparent" 
+        	"Queue"="Transparent" 
+        }
         LOD 200
         Blend SrcAlpha OneMinusSrcAlpha
         ZTest Less
@@ -33,7 +37,7 @@
             struct v2f {
                 float4  pos : SV_POSITION;
                 float2  uv : TEXCOORD0;
-                float2  texcoord : TEXCOORD0;
+                float2  texcoord : TEXCOORD1;
             };
             
             float4 _MainTex_ST;
@@ -76,3 +80,4 @@
     }
     Fallback "VertexLit"
  } 
+
