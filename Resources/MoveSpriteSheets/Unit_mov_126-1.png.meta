@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 794cbd5ec47634717bd9ac08cc7102cf
-timeCreated: 1432476171
+timeCreated: 1433227957
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -67,7 +67,7 @@ TextureImporter:
         y: 480
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_1
@@ -77,7 +77,7 @@ TextureImporter:
         y: 432
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_2
@@ -87,7 +87,7 @@ TextureImporter:
         y: 384
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_3
@@ -97,7 +97,7 @@ TextureImporter:
         y: 336
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_4
@@ -107,7 +107,7 @@ TextureImporter:
         y: 288
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_5
@@ -117,7 +117,7 @@ TextureImporter:
         y: 240
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_6
@@ -127,7 +127,7 @@ TextureImporter:
         y: 192
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_7
@@ -137,7 +137,7 @@ TextureImporter:
         y: 144
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_8
@@ -147,7 +147,7 @@ TextureImporter:
         y: 96
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_9
@@ -157,7 +157,7 @@ TextureImporter:
         y: 48
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: Unit_mov_126-1_10
@@ -167,7 +167,7 @@ TextureImporter:
         y: 0
         width: 48
         height: 48
-      alignment: 1
+      alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 

@@ -13,6 +13,21 @@ public static class CustomAnimation {
     public static AnimationData[] idleAnimationData;
     public static AnimationData[] attackAnimationData;
 
+	public const string IDLE_DOWN = "idle_down";
+	public const string IDLE_UP = "idle_up";
+	public const string IDLE_SIDE = "idle_side";
+
+	public const string MOVE_DOWN = "move_down";
+	public const string MOVE_UP = "move_up";
+	public const string MOVE_SIDE = "move_side";
+
+	public const string STATE_MOVE_DOWN = "MoveDown";
+	public const string STATE_MOVE_UP = "MoveUp";
+	public const string STATE_MOVE_SIDE = "MoveSide";
+
+	public const string STATE_IDLE_DOWN = "IdleDown";
+	public const string STATE_IDLE_UP = "IdleUp";
+	public const string STATE_IDLE_SIDE = "IdleSide";
 
     static CustomAnimation(){
 
@@ -42,7 +57,8 @@ public static class CustomAnimation {
 	{
 		Down = 0,
 		Up = 1,
-		Side = 2
+		Left = 2,
+		Right = 3
 	}
 	public enum SpriteSheetType
 	{
@@ -94,13 +110,13 @@ public static class CustomAnimation {
     
     public static AnimationData GetAnimationData(AnimationType type , Direction dir,  bool isWeak)
     {
-		int d = 0;
+		int d = (int)dir;
+		if (d == 3)
+			d = 2;
         switch (type){
             case AnimationType.Move:
-                d = (int)dir;
                 return idleAnimationData[d];
             case AnimationType.Attack:
-                d = (int)dir;
                 return attackAnimationData[d];
             default:
                 return idleAnimationData[d];
