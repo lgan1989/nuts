@@ -3,16 +3,19 @@ using System.Collections;
 
 public class Selector : MonoBehaviour {
 
-	public GameObject menu;
-	private Canvas menuCanvas;
 	private Logic logic;
 	public static TileGrid gridPosition;
+
+	void Awake(){
+		logic = GetComponent<Logic>();
+	
+	}
 
 
 	// Use this for initialization
 	void Start () {
-		menuCanvas = menu.GetComponent<Canvas> ();
-		logic = GetComponent<Logic>();
+
+	
 	}
 
 	Vector2 GetGrid(){
@@ -21,7 +24,7 @@ public class Selector : MonoBehaviour {
 
 		TileGrid grid = logic.GetGridByPosition(realPosition.x , realPosition.y);
 
-		Vector3 spritePosition = logic.GetPositionByGrid(grid.x , grid.y , 0);
+		Vector3 spritePosition = logic.GetPositionByGrid(grid.x , grid.y , -99);
 	
 		transform.position = spritePosition;
 
@@ -31,18 +34,26 @@ public class Selector : MonoBehaviour {
 
 	}
 
-
 	
 	// Update is called once per frame
 	void Update () {
 
-		if (menuCanvas.enabled) {
-			enabled = false;
-		} else {
-			enabled = true;
+		if (Logic.control != null){
+			if (Logic.control.CurrentStatus == Control.ControlStatus.MenuShown){
+				Vector3 spritePosition = logic.GetPositionByGrid(Logic.selectedPawn.gridPosition.x , Logic.selectedPawn.gridPosition.y , -99);
+				
+				transform.position = spritePosition;
+				gridPosition = Logic.selectedPawn.gridPosition;
+			}
+			else {
+				GetGrid ();
+			}
+		}
+		else{
+			GetGrid ();
 		}
 
-		GetGrid ();
+
 			
 	}
 

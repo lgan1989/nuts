@@ -8,7 +8,8 @@ public class Logic : MonoBehaviour {
 	private const int INT_MAX = (1<<30);
 
 	private TileInfo tileInfo;
-	public Pawn pawn;
+
+	public static Control control;
 
 	public static int[,] DIR = new int[4 , 2]{{0,1} , {0 , -1} , {-1, 0} , {1,0}}; //Down, Up, Left, Right
 
@@ -17,17 +18,22 @@ public class Logic : MonoBehaviour {
 
 	public static void SelectPawn(Pawn pawn){
 		Logic.selectedPawn = pawn;
+		control.CurrentStatus = Control.ControlStatus.PawnSelected;
 	}
 	
-	public static void DeselectPawn(Pawn pawn){
+	public static void DeselectPawn(){
 		Logic.selectedPawn = null;
+		control.CurrentStatus = Control.ControlStatus.Idle;
 	}
 
-
+	public TileInfo.TileType GetTileType(TileGrid pos){
+		return tileInfo.tileInfo[ pos.x , pos.y ];
+	}
 
 	void Awake(){
 		tileInfo = GameObject.Find ("Map").GetComponent<TileInfo>();
 		pawnList = new ArrayList();
+		control = GameObject.Find("Control").GetComponent<Control>();
 	}
 
 	// Use this for initialization
@@ -37,6 +43,35 @@ public class Logic : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+
+		switch (control.CurrentStatus) {
+		case Control.ControlStatus.ChooseAttackTarget:
+			if (selectedPawn.attackRangeGrid.Count == 0){
+				selectedPawn.ShowAttackRange();
+			}
+			break;
+		case Control.ControlStatus.PawnSelected:
+			if (selectedPawn.MoveRange.Count == 0){
+				selectedPawn.ShowMoveRange();
+			}
+			if (selectedPawn.attackRangeGrid.Count == 0){
+				selectedPawn.ShowAttackRange();
+			}
+			break;
+		case Control.ControlStatus.ShowMenu:
+			Logic.control.ShowMenu( selectedPawn.transform.position );
+			Logic.control.CurrentStatus = Control.ControlStatus.MenuShown;
+			break;
+		default:
+			if (selectedPawn){
+				selectedPawn.DestroyMoveRange();
+				selectedPawn.DestroyAttackRange();
+			}
+			break;
+		}
+
+
+
 	}
 
 	public Vector3 GetPositionByGrid( int x , int y , int z){
@@ -68,7 +103,7 @@ public class Logic : MonoBehaviour {
 		for (int i = 0 ; i < Logic.pawnList.Count ; i ++)
 		{
 			Pawn p = (Pawn)pawnList[i];
-			if (pawn.team != p.team)
+			if (selectedPawn.team != p.team)
 			{
 				TileGrid pos = p.gridPosition;
 				for (int d = 0 ; d < 4 ; d ++)
@@ -90,11 +125,11 @@ public class Logic : MonoBehaviour {
 		ArrayList result = new ArrayList();
 
 		var mobility_required = CalculateMobilityReduce();
-		mobility_required[pawn.gridPosition.x , pawn.gridPosition.y] = 1;
+		mobility_required[selectedPawn.gridPosition.x , selectedPawn.gridPosition.y] = 1;
 
 		Queue q = new Queue();
 		Hashtable visited = new Hashtable();
-		Tuple<int , TileGrid> ele = new Tuple<int,TileGrid>(0 , pawn.gridPosition);
+		Tuple<int , TileGrid> ele = new Tuple<int,TileGrid>(0 , selectedPawn.gridPosition);
 
 		visited.Add( ele.Second.GetString() ,  true);
 
@@ -138,6 +173,11 @@ public class Logic : MonoBehaviour {
 	public void GridSetEmpty(TileGrid grid){
 		tileInfo.collisionInfo[ grid.x , grid.y ] = TileInfo.CollisionType.Empty;
 	}
+
+	/*
+		Update collision info
+	 */
+
 	public void GridSetOccupied(TileGrid grid){
 		tileInfo.collisionInfo[ grid.x , grid.y ] = TileInfo.CollisionType.Occupied;
 	}
@@ -153,12 +193,15 @@ public class Logic : MonoBehaviour {
 			return CustomAnimation.Direction.Left;
 		return CustomAnimation.Direction.Down;
 	}
-	
+	/*
+		Return a arraylist of grid indicating the path from start to destination.
+	 */
 	public ArrayList FindPath(TileGrid start, TileGrid destination, int stepLimit){
 
 		ArrayList path = new ArrayList();
 
 		if (start.GetString() == destination.GetString()){
+			path.Add(start);
 			return path;
 		}
 		
@@ -168,7 +211,7 @@ public class Logic : MonoBehaviour {
 		Queue q = new Queue();
 		Hashtable visited = new Hashtable();
 		Hashtable prev = new Hashtable();
-		Tuple<int , TileGrid> ele = new Tuple<int,TileGrid>(0 , pawn.gridPosition);
+		Tuple<int , TileGrid> ele = new Tuple<int,TileGrid>(0 , selectedPawn.gridPosition);
 		
 		visited.Add( ele.Second.GetString() ,  true);
 		
@@ -216,5 +259,42 @@ public class Logic : MonoBehaviour {
 
 		return path;
 		
+	}
+
+	public ArrayList GetAttackRange(){
+		ArrayList result = new ArrayList();
+		for (int i = 0 ; i < selectedPawn.AttackRange.Count ; i ++){
+			TileGrid target = (TileGrid)selectedPawn.AttackRange[i];
+			TileGrid grid = new TileGrid(selectedPawn.gridPosition.x + target.x , selectedPawn.gridPosition.y + target.y);
+			result.Add( grid );
+		}
+		return result;
+	}
+
+
+	public static TileGrid DiffPosition(TileGrid s , TileGrid t){
+		TileGrid result = new TileGrid(t.x - s.x , t.y - s.y);
+		return result;
+	}
+	public static bool InRange(TileGrid grid , ArrayList range){
+		foreach (TileGrid g in range){
+			if (grid.ToString() == g.ToString())
+				return true;
+		}
+		return false;
+	}
+
+
+	public ArrayList GetValidTarget(){
+		ArrayList result = new ArrayList();
+
+		for (int i = 0 ; i < Logic.pawnList.Count ; i ++){
+			Pawn p = (Pawn)Logic.pawnList[i];
+			if ( p.team != selectedPawn.team && InRange(p.gridPosition , selectedPawn.AttackRange) ){
+				result.Add( p );
+			}
+		}
+
+		return result;
 	}
 }

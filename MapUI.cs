@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections;
 
 public class MapUI : MonoBehaviour {
@@ -16,9 +17,11 @@ public class MapUI : MonoBehaviour {
 	}
 
 	void OnMouseOver(){
+
+		if (EventSystem.current.IsPointerOverGameObject()) return;
 		if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
 		{
-			Logic.selectedPawn = null;		
+			Logic.DeselectPawn();
 		}
 		
 	}

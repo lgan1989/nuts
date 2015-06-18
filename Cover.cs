@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections;
 
 public class Cover : MonoBehaviour {
@@ -8,6 +9,7 @@ public class Cover : MonoBehaviour {
 	public bool fadeIn = true;
 	public float fade = 0;
 	public Color color;
+	public float transparency = 0.3f;
 	public static int zIndex = 4 ;
 
 	// Use this for initialization
@@ -17,8 +19,8 @@ public class Cover : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (fadeIn && 0.4f - fade > 0.00001f) {
-			fade = Mathf.SmoothDamp(fade,0.4f, ref fadeSpeed,fadeTime);
+		if (fadeIn && transparency - fade > 0.00001f) {
+			fade = Mathf.SmoothDamp(fade,transparency, ref fadeSpeed,fadeTime);
 			color.a = fade;
 			gameObject.GetComponent<Renderer> ().material.SetColor ("_TintColor" , color);
 		}
@@ -27,16 +29,24 @@ public class Cover : MonoBehaviour {
 
 	void OnMouseOver(){
 
+		if (EventSystem.current.IsPointerOverGameObject()){
+			return;
+		}
+
+
 		if (Logic.selectedPawn){
 			if (Input.GetMouseButtonDown(0))
 			{
 				GameObject selector = GameObject.Find("Selection");
 			
 				Logic.selectedPawn.FindPathAndMoveTo(Selector.gridPosition);
+
+				Logic.control.CurrentStatus = Control.ControlStatus.Moving;
+
 			}
 			else if (Input.GetMouseButtonDown(1))
 			{
-				Logic.selectedPawn = null;
+				Logic.DeselectPawn();
 			}
 		}
 		

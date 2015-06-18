@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEditor;
 using System.Collections;
 
@@ -15,11 +16,37 @@ public class Pawn : MonoBehaviour {
 	public TileGrid gridPosition;
 
 	private ArrayList moveRange;
+	private ArrayList attackRange;
+	public ArrayList attackRangeGrid;
+
+	public ArrayList MoveRange{
+		get{
+			return moveRange;
+		}
+		set{
+			moveRange = value;
+		}
+	}
+	public ArrayList AttackRange{
+		get{
+			return attackRange;
+		}
+		set{
+			attackRange = value;
+		}
+	}
+
 	private Logic logic;
 
 	private Animator animator;
 
 	private CustomAnimation.Direction faceDirection;
+
+	//main properties
+	public AttackType attackType;
+
+	//for attack
+	private ArrayList validTarget;
 
 	//movement
 	private ArrayList path;
@@ -29,6 +56,17 @@ public class Pawn : MonoBehaviour {
 	private float px;
 	private float py;
 	private int frameCount = 0;
+
+	public enum AttackType{
+		Melee1,
+		Melee2,
+		Range
+	};
+
+	void Awake(){
+	
+
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -58,14 +96,45 @@ public class Pawn : MonoBehaviour {
 
 		logic = logicContrller.GetComponent<Logic>();
 
+		gridPosition = logic.GetGridByPosition( transform.position.x , transform.position.y); 
 
-		gridPosition = logic.GetGridByPosition( transform.position.x , transform.position.y);
+		attackRange = GetAttackRange(attackType);
+
+		attackRangeGrid = new ArrayList();
+
 		logic.GridSetOccupied(gridPosition);
 
 		Logic.pawnList.Add(this);
 	}
 
-	void DestroyMoveRange(){
+	ArrayList GetAttackRange(AttackType type){
+		ArrayList range = new ArrayList();
+		if (type == AttackType.Melee1){
+			range.Add( new TileGrid(0,1) );
+			range.Add( new TileGrid(1,0) );
+			range.Add( new TileGrid(0,-1) );
+			range.Add( new TileGrid(-1,0) );
+		}
+		else if (type == AttackType.Melee2){
+			range.Add( new TileGrid(0,1) );
+			range.Add( new TileGrid(1,0) );
+			range.Add( new TileGrid(0,-1) );
+			range.Add( new TileGrid(-1,0) );
+			range.Add( new TileGrid(1,1) );
+			range.Add( new TileGrid(1,-1) );
+			range.Add( new TileGrid(-1,-1) );
+			range.Add( new TileGrid(-1,1) );
+		}
+		else if (type == AttackType.Range){
+			range.Add( new TileGrid(0,2) );
+			range.Add( new TileGrid(2,0) );
+			range.Add( new TileGrid(0,-2) );
+			range.Add( new TileGrid(-2,0) );
+		}
+		return range;
+	}
+
+	public void DestroyMoveRange(){
 		if (moveRange != null){
 			foreach (GameObject go in moveRange){
 				Destroy(go);
@@ -74,8 +143,18 @@ public class Pawn : MonoBehaviour {
 		}
 	}
 
+	public void DestroyAttackRange(){
+		if (attackRangeGrid != null){
+			foreach (GameObject go in attackRangeGrid){
+				Destroy(go);
+			}
+			attackRangeGrid.Clear();
+		}
+	}
+
 	// Update is called once per frame
 	void Update () {
+
 
 		if (faceDirection == CustomAnimation.Direction.Right){
 			transform.localScale = new Vector2(-1, transform.localScale.y);
@@ -84,45 +163,73 @@ public class Pawn : MonoBehaviour {
 			transform.localScale = new Vector2(1, transform.localScale.y);
 		}
 
-		if (Logic.selectedPawn == null || Logic.selectedPawn.gameObject != gameObject ){
-			DestroyMoveRange();
-		}
-	
-		if (moving){
-
-			Vector3 movingPosition = logic.GetPositionByGrid( movingGrid.x , movingGrid.y , Pawn.zIndex);
-		
-			px = px + 0.08f * Logic.DIR[movingDirection,0];
-			py = py - 0.08f * Logic.DIR[movingDirection,1];
-
-		//	px = Mathf.Lerp(px, movingPosition.x , movingTime);
-		//	py = Mathf.Lerp(py, movingPosition.y , movingTime);
-
-			gameObject.transform.position = new Vector3(px , py , Pawn.zIndex);
-			frameCount ++;
-			if ( frameCount == 6){
-				frameCount = 0;
-				moving = false;
-			}
-
+		if (logic.GetTileType(gridPosition) != TileInfo.TileType.Ground){
+			gameObject.GetComponent<Renderer>().material.shader = Shader.Find ("Mask");
 		}
 		else{
-			if (path.Count > 0){
-				MoveTo( (TileGrid)path[0] );
-				gridPosition = (TileGrid)path[0];
-				path.RemoveAt(0);  
-				if (path.Count == 0)
-					Idle();
-			}
-			else{	
-				if (movingGrid != null){
-					px = transform.position.x;
-					py = transform.position.y;
+			gameObject.GetComponent<Renderer>().material.shader = Shader.Find ("Sprites/Default");
+		}
 
-					movingGrid = null;
+		if (Logic.selectedPawn != this || Logic.selectedPawn == null){
+			DestroyAttackRange();
+			DestroyMoveRange();
+		}
+
+		if (Logic.control.CurrentStatus == Control.ControlStatus.Moving){
+	
+			if (moving){
+
+				Vector3 movingPosition = logic.GetPositionByGrid( movingGrid.x , movingGrid.y , Pawn.zIndex);
+			
+				px = px + 0.08f * Logic.DIR[movingDirection,0];
+				py = py - 0.08f * Logic.DIR[movingDirection,1];
+
+			//	px = Mathf.Lerp(px, movingPosition.x , movingTime);
+			//	py = Mathf.Lerp(py, movingPosition.y , movingTime);
+
+				gameObject.transform.position = new Vector3(px , py , Pawn.zIndex);
+				frameCount ++;
+				if ( frameCount == 6){
+					frameCount = 0;
+					moving = false;
 				}
 
 			}
+			else{
+
+				if (path.Count == 0){
+					Idle();
+				}
+
+				if (path.Count > 0){
+
+					if ( (TileGrid)path[0] == gridPosition && path.Count == 1){
+						Logic.control.CurrentStatus = Control.ControlStatus.ShowMenu;
+						path.Remove(0);
+					}
+					else{
+						MoveTo( (TileGrid)path[0] );
+						gridPosition = (TileGrid)path[0];
+						path.RemoveAt(0);  
+					}
+				}
+				else{	
+					if (movingGrid != null){
+						px = transform.position.x; 
+						py = transform.position.y; 
+						movingGrid = null;
+
+						Logic.control.CurrentStatus = Control.ControlStatus.ShowMenu;
+					
+					}
+
+				}
+			}
+		}
+		else if (Logic.control.CurrentStatus == Control.ControlStatus.Idle ||
+		         Logic.control.CurrentStatus == Control.ControlStatus.FinishAttack
+		         ){
+			Idle();
 		}
 	
 	}
@@ -178,8 +285,9 @@ public class Pawn : MonoBehaviour {
 		logic.GridSetOccupied(destination);
 	}
 	
-	public void Attack(){
-
+	public void Attack(Pawn pawn){
+		animator.Play ("Attack");
+		Logic.control.CurrentStatus = Control.ControlStatus.Attacking;
 	}
 
 	void OnMouseDown(){
@@ -190,25 +298,69 @@ public class Pawn : MonoBehaviour {
 	//	panel.position = new Vector3 (panel.position.x + 60, panel.position.y - 60, panel.position.z);
 	//	canvas.enabled = true;
 
-		DestroyMoveRange();
+		if (EventSystem.current.IsPointerOverGameObject()) return;
 
-		Logic.SelectPawn (this);
+		if (Logic.control.CurrentStatus == Control.ControlStatus.Idle)
+			Logic.SelectPawn (this);
+		else if (Logic.control.CurrentStatus == Control.ControlStatus.ChooseAttackTarget){
+			if ( this.IsValidTarget( Logic.selectedPawn , Control.ActionType.Attack ) ){
+				Logic.selectedPawn.Attack( this );
+			}
+		}
+	}
 
-		logic.pawn = this;
+	public bool IsValidTarget(Pawn pawn , Control.ActionType action){
+		if (action == Control.ActionType.Attack){
+			return this.team != pawn.team;
+		}
+		return false;
+	}
 
+	public void ShowMoveRange(){
 		ArrayList validMove = logic.GetValidMove();
-
+		
 		foreach (TileGrid move in validMove)
 		{
 			GameObject tile = (GameObject)Instantiate(Resources.Load("TileCover"));
 			
-			tile.transform.position = logic.GetPositionByGrid( move.x , move.y , -99);
+			tile.transform.position = logic.GetPositionByGrid( move.x , move.y , -98);
 			tile.GetComponent<Cover>().color = new Color( 0.2f , 0.2f , 1.0f, 0f);
-			  
+			
 			moveRange.Add( tile );
-
+			
 		}
-	
+	}
+
+	public void ShowAttackRange(){
+
+		ArrayList validRange = logic.GetAttackRange();
+		
+		foreach (TileGrid grid in validRange)
+		{
+			GameObject tile = (GameObject)Instantiate(Resources.Load("UI/AttackFrame"));
+			
+			tile.transform.position = logic.GetPositionByGrid( grid.x , grid.y , -99);
+			tile.GetComponent<Cover>().color = new Color( 1.0f , 0.2f , 0.2f, 0f);
+			
+			attackRangeGrid.Add( tile );
+			
+		}
+
+		ArrayList validTarget = logic.GetValidTarget();
+		
+		foreach (Pawn target in validTarget)
+		{
+			GameObject tile = (GameObject)Instantiate(Resources.Load("TileCover"));
+			
+			tile.transform.position = logic.GetPositionByGrid( target.gridPosition.x , target.gridPosition.y , -97);
+			tile.GetComponent<Cover>().color = new Color( 1.0f , 0.2f , 0.2f, 0f);
+			tile.GetComponent<Cover>().transparency = 0.6f;
+			tile.GetComponent<BoxCollider2D>().enabled = false;
+			
+			attackRangeGrid.Add( tile );
+			
+		}
+
 	}
 
 	private AnimationClip MakeAnimationClip(CustomAnimation.AnimationType type , CustomAnimation.Direction dir , bool isWeak){
@@ -243,11 +395,22 @@ public class Pawn : MonoBehaviour {
 			keyFrames[i].value = sprites[ data.frames[i] ];
 			
 		}
+
+
+
 		animClip.frameRate = 12;
 		animClip.wrapMode = WrapMode.Loop;
 
+	
+
 		AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings (animClip);
 		settings.loopTime = true;
+
+		if (type == CustomAnimation.AnimationType.Attack){
+			animClip.wrapMode = WrapMode.Once;
+			animClip.frameRate = 12;
+			settings.loopTime = false;
+		}
 	
 		AnimationUtility.SetAnimationClipSettings (animClip, settings);
 		

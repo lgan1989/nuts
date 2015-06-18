@@ -14,13 +14,14 @@ public class TileGrid{
 	{
 		return x.ToString() + "," + y.ToString();
 	}
+
 }
 
 public class TileInfo : MonoBehaviour {
 
 	public string mapID;
 	public CollisionType[,] collisionInfo;
-	public int[,] tileInfo;
+	public TileType[,] tileInfo;
 	public int[,] blockInfo;
 	public float xOffset = 0;
 	public float yOffset = 0;
@@ -33,7 +34,7 @@ public class TileInfo : MonoBehaviour {
 	public enum TileType{
 		Ground = 0,
 		JungleLow = 1,
-		JungleHight = 2
+		JungleHigh = 2
 	}
 
 	public enum CollisionType{
@@ -74,7 +75,7 @@ public class TileInfo : MonoBehaviour {
 		yOffset = map.transform.position.y;
 		
 		collisionInfo = new CollisionType[w,h];
-		tileInfo = new int[w,h];
+		tileInfo = new TileType[w,h];
 		blockInfo = new int[w,h];
 	
 		
@@ -86,7 +87,7 @@ public class TileInfo : MonoBehaviour {
 				int type = int.Parse(tmp);
 				if (i < lines.Length/2){
 					collisionInfo[j/2,i] = CollisionType.Empty;
-					tileInfo[j/2,i] = type;
+					tileInfo[j/2,i] = (TileType)type;
 				}
 				else{
 					blockInfo[j/2,i - lines.Length/2] = type;

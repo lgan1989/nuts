@@ -46,7 +46,7 @@ public static class CustomAnimation {
 
         for (int i = 0 ; i < 3 ; i ++){
 			attackAnimationData[i] = new AnimationData();
-            attackAnimationData[i].keytimes = new float[4]{0.0f , 0.25f , 0.35f , 0.4f};
+            attackAnimationData[i].keytimes = new float[4]{0.0f , 0.20f , 0.30f , 0.5f};
             int offset = (i << 2);
             attackAnimationData[i].frames = new int[4]{offset,offset+1,offset+2,offset+3};
         }

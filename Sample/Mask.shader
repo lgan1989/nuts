@@ -1,4 +1,4 @@
-﻿Shader "Tutorial/Textured Colored" { 
+﻿Shader "Mask" { 
 
     Properties { 
 
@@ -19,7 +19,10 @@
         LOD 200
         Blend SrcAlpha OneMinusSrcAlpha
         ZTest Less
-     
+     	Cull Off
+		Lighting Off
+
+		
         Pass 
         {
      
@@ -75,6 +78,8 @@
                 texcol.a = tex2D (_AlphaTex, TRANSFORM_TEX (tmp, _AlphaTex) ).a * texcol.a;
                 return texcol * _Color;
             }
+      
+            
             ENDCG
         }
     }
