@@ -33,7 +33,7 @@ public class StateTransition : StateMachineBehaviour {
 	// OnStateExit is called when a transition ends and the state machine finishes evaluating this state
 	override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
 		if (stateInfo.IsTag ("attack")) {
-			Logic.control.CurrentStatus = Control.ControlStatus.FinishAttack;
+			Control.PushEvent(new GameEvent(EventTargetType.None , EventType.AttackFinished));
 		}
 	}
 

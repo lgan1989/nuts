@@ -5,6 +5,13 @@ using System;
 
 public class Logic : MonoBehaviour {
 
+
+	public enum Team{
+		Player,
+		Friend,
+		Enermy
+	}
+
 	private const int INT_MAX = (1<<30);
 
 	private TileInfo tileInfo;
@@ -18,7 +25,13 @@ public class Logic : MonoBehaviour {
 
 	public static void SelectPawn(Pawn pawn){
 		Logic.selectedPawn = pawn;
-		control.CurrentStatus = Control.ControlStatus.PawnSelected;
+		if (pawn.team == Team.Player){
+			control.CurrentStatus = Control.ControlStatus.PlayerPawnSelected;
+		}
+		else{
+			control.CurrentStatus = Control.ControlStatus.NonPlayerPawnSelected;
+		}
+
 	}
 	
 	public static void DeselectPawn(){
@@ -46,21 +59,21 @@ public class Logic : MonoBehaviour {
 
 		switch (control.CurrentStatus) {
 		case Control.ControlStatus.ChooseAttackTarget:
-			if (selectedPawn.attackRangeGrid.Count == 0){
+			if (selectedPawn.attackRangeGrid != null && selectedPawn.attackRangeGrid.Count == 0){
 				selectedPawn.ShowAttackRange();
 			}
 			break;
-		case Control.ControlStatus.PawnSelected:
-			if (selectedPawn.MoveRange.Count == 0){
+		case Control.ControlStatus.NonPlayerPawnSelected:
+		case Control.ControlStatus.PlayerPawnSelected:
+			if (selectedPawn.MoveRange != null && selectedPawn.MoveRange.Count == 0){
 				selectedPawn.ShowMoveRange();
 			}
-			if (selectedPawn.attackRangeGrid.Count == 0){
+			if (selectedPawn.attackRangeGrid != null && selectedPawn.attackRangeGrid.Count == 0){
 				selectedPawn.ShowAttackRange();
 			}
 			break;
 		case Control.ControlStatus.ShowMenu:
 			Logic.control.ShowMenu( selectedPawn.transform.position );
-			Logic.control.CurrentStatus = Control.ControlStatus.MenuShown;
 			break;
 		default:
 			if (selectedPawn){
@@ -191,6 +204,10 @@ public class Logic : MonoBehaviour {
 			return CustomAnimation.Direction.Right;
 		if (start.y == target.y && start.x > target.x)
 			return CustomAnimation.Direction.Left;
+		if (start.x < target.x)
+			return CustomAnimation.Direction.Right;
+		if (start.x > target.x)
+			return CustomAnimation.Direction.Left;
 		return CustomAnimation.Direction.Down;
 	}
 	/*
@@ -278,7 +295,7 @@ public class Logic : MonoBehaviour {
 	}
 	public static bool InRange(TileGrid grid , ArrayList range){
 		foreach (TileGrid g in range){
-			if (grid.ToString() == g.ToString())
+			if (grid.GetString() == g.GetString())
 				return true;
 		}
 		return false;
@@ -290,7 +307,7 @@ public class Logic : MonoBehaviour {
 
 		for (int i = 0 ; i < Logic.pawnList.Count ; i ++){
 			Pawn p = (Pawn)Logic.pawnList[i];
-			if ( p.team != selectedPawn.team && InRange(p.gridPosition , selectedPawn.AttackRange) ){
+			if ( p.team != selectedPawn.team && InRange( DiffPosition(p.gridPosition , selectedPawn.gridPosition)  , selectedPawn.AttackRange) ){
 				result.Add( p );
 			}
 		}

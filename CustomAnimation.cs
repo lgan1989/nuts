@@ -21,6 +21,10 @@ public static class CustomAnimation {
 	public const string MOVE_UP = "move_up";
 	public const string MOVE_SIDE = "move_side";
 
+	public const string ATTACK_DOWN = "attack_down";
+	public const string ATTACK_UP = "attack_up";
+	public const string ATTACK_SIDE = "attack_side";
+
 	public const string STATE_MOVE_DOWN = "MoveDown";
 	public const string STATE_MOVE_UP = "MoveUp";
 	public const string STATE_MOVE_SIDE = "MoveSide";
@@ -28,6 +32,10 @@ public static class CustomAnimation {
 	public const string STATE_IDLE_DOWN = "IdleDown";
 	public const string STATE_IDLE_UP = "IdleUp";
 	public const string STATE_IDLE_SIDE = "IdleSide";
+
+	public const string STATE_ATTACK_DOWN = "AttackDown";
+	public const string STATE_ATTACK_UP = "AttackUp";
+	public const string STATE_ATTACK_SIDE = "AttackSide";
 
     static CustomAnimation(){
 

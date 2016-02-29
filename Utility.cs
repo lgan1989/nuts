@@ -23,6 +23,7 @@ public class Status{
 
 public enum EventTargetType{
 	None,
+	Any,
 	Tile,
 	MoveTile,
 	PlayerPawn,
@@ -42,16 +43,21 @@ public enum EventType{
 public class GameEvent
 {
 	public EventTargetType target;
+	public GameObject obj;
 	public EventType type;
 
 	public GameEvent(EventTargetType _o , EventType _t){
 		target = _o;
 		type = _t;
 	}
-
+	public GameEvent(EventTargetType _o ,GameObject _obj, EventType _t){
+		target = _o;
+		type = _t;
+		obj = _obj;
+	}
 	public override int GetHashCode ()
 	{
-		return (int)((target + 1) * 10) + (int)type;
+		return (int)(target + 1) * 10+ (int)type;
 	}
 
 }

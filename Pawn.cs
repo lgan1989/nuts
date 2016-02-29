@@ -6,7 +6,7 @@ using System.Collections;
 public class Pawn : MonoBehaviour {
 
 	public int heroID = 0;
-	public int team;
+	public Logic.Team team;
 	
 	public GameObject logicContrller;
 	public GameObject guiController;
@@ -40,7 +40,7 @@ public class Pawn : MonoBehaviour {
 
 	private Animator animator;
 
-	private CustomAnimation.Direction faceDirection;
+	public CustomAnimation.Direction faceDirection;
 
 	//main properties
 	public AttackType attackType;
@@ -85,7 +85,9 @@ public class Pawn : MonoBehaviour {
 		temp [CustomAnimation.MOVE_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Up, false); 
 		temp [CustomAnimation.MOVE_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Left, false); 
 
-		temp ["attack_down"] = MakeAnimationClip (CustomAnimation.AnimationType.Attack , CustomAnimation.Direction.Down, false);
+		temp [CustomAnimation.ATTACK_DOWN] = MakeAnimationClip (CustomAnimation.AnimationType.Attack , CustomAnimation.Direction.Down, false);
+		temp [CustomAnimation.ATTACK_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Attack , CustomAnimation.Direction.Up, false);
+		temp [CustomAnimation.ATTACK_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Attack , CustomAnimation.Direction.Left, false);
 
 		animator.runtimeAnimatorController = temp;
 		moveRange = new ArrayList();
@@ -286,8 +288,20 @@ public class Pawn : MonoBehaviour {
 	}
 	
 	public void Attack(Pawn pawn){
-		animator.Play ("Attack");
-		Logic.control.CurrentStatus = Control.ControlStatus.Attacking;
+		faceDirection = Logic.GetDirection(gridPosition , pawn.gridPosition);
+		switch (faceDirection)
+		{
+		case CustomAnimation.Direction.Down:
+			animator.Play(CustomAnimation.STATE_ATTACK_DOWN);
+			break;
+		case CustomAnimation.Direction.Up:
+			animator.Play(CustomAnimation.STATE_ATTACK_UP);
+			break;
+		case CustomAnimation.Direction.Left:
+		case CustomAnimation.Direction.Right:
+			animator.Play(CustomAnimation.STATE_ATTACK_SIDE);
+			break;
+		}
 	}
 
 	void OnMouseDown(){
@@ -299,14 +313,32 @@ public class Pawn : MonoBehaviour {
 	//	canvas.enabled = true;
 
 		if (EventSystem.current.IsPointerOverGameObject()) return;
-
+		/*
 		if (Logic.control.CurrentStatus == Control.ControlStatus.Idle)
 			Logic.SelectPawn (this);
 		else if (Logic.control.CurrentStatus == Control.ControlStatus.ChooseAttackTarget){
 			if ( this.IsValidTarget( Logic.selectedPawn , Control.ActionType.Attack ) ){
 				Logic.selectedPawn.Attack( this );
 			}
+		}*/
+		EventType type = EventType.LeftClick;
+		if (Input.GetMouseButtonDown(1)){
+			type = EventType.RightClick;
 		}
+
+		EventTargetType target = EventTargetType.None;
+		if (team == Logic.Team.Player){
+			target = EventTargetType.PlayerPawn;
+		}
+		else if (team == Logic.Team.Friend){
+			target = EventTargetType.FriendPawn;
+		}
+		else if (team == Logic.Team.Enermy){
+			target = EventTargetType.EnemyPawn;
+		}
+
+		Control.PushEvent( new GameEvent(target , gameObject , type) );
+
 	}
 
 	public bool IsValidTarget(Pawn pawn , Control.ActionType action){
@@ -314,6 +346,14 @@ public class Pawn : MonoBehaviour {
 			return this.team != pawn.team;
 		}
 		return false;
+	}
+
+	Color GetColorByTeam(){
+		if (team == Logic.Team.Player)
+			return new Color( 0.2f , 0.2f , 1.0f, 0f);
+		else{
+			return new Color( 0.1f , 0.8f , 0.2f, 0f);;
+		}
 	}
 
 	public void ShowMoveRange(){
@@ -324,7 +364,10 @@ public class Pawn : MonoBehaviour {
 			GameObject tile = (GameObject)Instantiate(Resources.Load("TileCover"));
 			
 			tile.transform.position = logic.GetPositionByGrid( move.x , move.y , -98);
-			tile.GetComponent<Cover>().color = new Color( 0.2f , 0.2f , 1.0f, 0f);
+
+
+			tile.GetComponent<Cover>().color = GetColorByTeam();
+		
 			
 			moveRange.Add( tile );
 			

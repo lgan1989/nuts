@@ -39,7 +39,7 @@ public class Selector : MonoBehaviour {
 	void Update () {
 
 		if (Logic.control != null){
-			if (Logic.control.CurrentStatus == Control.ControlStatus.MenuShown){
+			if (Logic.control.CurrentStatus == Control.ControlStatus.ShowMenu){
 				Vector3 spritePosition = logic.GetPositionByGrid(Logic.selectedPawn.gridPosition.x , Logic.selectedPawn.gridPosition.y , -99);
 				
 				transform.position = spritePosition;
