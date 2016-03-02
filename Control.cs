@@ -33,7 +33,7 @@ public class Control : MonoBehaviour {
 		ChooseAttackTarget ,
 		Moving ,
 		Attacking,
-		FinishAttack 
+		FinishAttack
 	}
 
 	// Use this for initialization
@@ -64,7 +64,7 @@ public class Control : MonoBehaviour {
 		LinkStatus(ControlStatus.Attacking , new GameEvent(EventTargetType.None , EventType.AttackFinished) , ControlStatus.Idle);
 
 		LinkStatus(ControlStatus.ChooseAttackTarget , new GameEvent(EventTargetType.Any , EventType.RightClick) , ControlStatus.ShowMenu);
-		
+
 	}
 
 	void LinkStatus(ControlStatus from , GameEvent evt, ControlStatus to){
@@ -88,7 +88,7 @@ public class Control : MonoBehaviour {
 		canvas.enabled = false;
 		eventQueue = new Queue<GameEvent>();
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
 		ProcessEvent();
@@ -132,12 +132,17 @@ public class Control : MonoBehaviour {
 	}
 
 	public void ShowMenu(Vector3 position){
-//		position.Set(position.x , position.y , -100);
+		position.Set(position.x , position.y , -100);
 
-//		Transform panel = canvas.transform.FindChild ("Panel");
-	//	panel.position = position;
-	//	panel.position = new Vector3 (panel.position.x + 60, panel.position.y - 60, panel.position.z);
-	//	menu.transform.FindChild("Panel").transform.position = position;
+		Transform panel = canvas.transform.FindChild ("Panel");
+
+		float x = position.x > 0.5f ? position.x - 0.5f : position.x + 0.5f;
+		float y = position.y > 0.5f ? position.y - 0.5f : position.y + 0.5f;
+
+	    position = new Vector3 (x, y, position.z);
+		Vector3 panelPosition = RectTransformUtility.WorldToScreenPoint(Camera.main, position);
+
+		menu.transform.FindChild("Panel").transform.position = panelPosition;
 		canvas.enabled = true;
 	}
 
