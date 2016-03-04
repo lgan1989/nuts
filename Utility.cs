@@ -12,12 +12,12 @@ public class Tuple<T1, T2>
 	{
 		First = first;
 		Second = second;
-	}	
+	}
 
 }
 
 public class Status{
-	public Hashtable next; 
+	public Hashtable next;
 }
 
 
@@ -37,7 +37,8 @@ public enum EventType{
 	LeftClick,
 	RightClick,
 	MoveFinished,
-	AttackFinished
+	AttackFinished,
+    ActionFinished
 }
 
 public class GameEvent

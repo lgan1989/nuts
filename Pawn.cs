@@ -7,11 +7,13 @@ public class Pawn : MonoBehaviour {
 
 	public int heroID = 0;
 	public Logic.Team team;
-	
+
+    public bool finished = false;
+
 	public GameObject logicContrller;
 	public GameObject guiController;
 
-	
+
 	public static int zIndex = -3;
 	public TileGrid gridPosition;
 
@@ -64,30 +66,40 @@ public class Pawn : MonoBehaviour {
 	};
 
 	void Awake(){
-	
+
 
 	}
 
 	// Use this for initialization
 	void Start () {
-	
+
 		faceDirection = CustomAnimation.Direction.Down;
 
 		animator = gameObject.GetComponent<Animator> ();
 		AnimatorOverrideController temp = new AnimatorOverrideController ();
 		temp.runtimeAnimatorController = ((Animator)GameObject.Find ("Template").GetComponent<Animator> ()).runtimeAnimatorController;
 
-		temp [CustomAnimation.IDLE_DOWN] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Down, false); 
-		temp [CustomAnimation.IDLE_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Up, false); 
-		temp [CustomAnimation.IDLE_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Left, false); 
+		temp [CustomAnimation.IDLE_DOWN] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Down, false);
+		temp [CustomAnimation.IDLE_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Up, false);
+		temp [CustomAnimation.IDLE_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Left, false);
 
-		temp [CustomAnimation.MOVE_DOWN] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Down, false); 
-		temp [CustomAnimation.MOVE_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Up, false); 
-		temp [CustomAnimation.MOVE_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Left, false); 
+		temp [CustomAnimation.MOVE_DOWN] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Down, false);
+		temp [CustomAnimation.MOVE_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Up, false);
+		temp [CustomAnimation.MOVE_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Move , CustomAnimation.Direction.Left, false);
 
 		temp [CustomAnimation.ATTACK_DOWN] = MakeAnimationClip (CustomAnimation.AnimationType.Attack , CustomAnimation.Direction.Down, false);
 		temp [CustomAnimation.ATTACK_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Attack , CustomAnimation.Direction.Up, false);
 		temp [CustomAnimation.ATTACK_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Attack , CustomAnimation.Direction.Left, false);
+
+		temp [CustomAnimation.PARRY_DOWN] = MakeAnimationClip (CustomAnimation.AnimationType.Parry , CustomAnimation.Direction.Down, false);
+		temp [CustomAnimation.PARRY_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Parry , CustomAnimation.Direction.Up, false);
+		temp [CustomAnimation.PARRY_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Parry , CustomAnimation.Direction.Left, false);
+
+		temp [CustomAnimation.STAND_DOWN] = MakeAnimationClip (CustomAnimation.AnimationType.Stand , CustomAnimation.Direction.Down, false);
+		temp [CustomAnimation.STAND_UP] = MakeAnimationClip (CustomAnimation.AnimationType.Stand , CustomAnimation.Direction.Up, false);
+		temp [CustomAnimation.STAND_SIDE] = MakeAnimationClip (CustomAnimation.AnimationType.Stand , CustomAnimation.Direction.Left, false);
+
+		temp [CustomAnimation.DAMAGED] = MakeAnimationClip (CustomAnimation.AnimationType.Damaged , CustomAnimation.Direction.Down, false);
 
 		animator.runtimeAnimatorController = temp;
 		moveRange = new ArrayList();
@@ -98,7 +110,7 @@ public class Pawn : MonoBehaviour {
 
 		logic = logicContrller.GetComponent<Logic>();
 
-		gridPosition = logic.GetGridByPosition( transform.position.x , transform.position.y); 
+		gridPosition = logic.GetGridByPosition( transform.position.x , transform.position.y);
 
 		attackRange = GetAttackRange(attackType);
 
@@ -177,12 +189,16 @@ public class Pawn : MonoBehaviour {
 			DestroyMoveRange();
 		}
 
+		if (finished){
+			return;
+		}
+
 		if (Logic.control.CurrentStatus == Control.ControlStatus.Moving){
-	
+
 			if (moving){
 
 				Vector3 movingPosition = logic.GetPositionByGrid( movingGrid.x , movingGrid.y , Pawn.zIndex);
-			
+
 				px = px + 0.08f * Logic.DIR[movingDirection,0];
 				py = py - 0.08f * Logic.DIR[movingDirection,1];
 
@@ -212,28 +228,31 @@ public class Pawn : MonoBehaviour {
 					else{
 						MoveTo( (TileGrid)path[0] );
 						gridPosition = (TileGrid)path[0];
-						path.RemoveAt(0);  
+						path.RemoveAt(0);
 					}
 				}
-				else{	
+				else{
 					if (movingGrid != null){
-						px = transform.position.x; 
-						py = transform.position.y; 
+						px = transform.position.x;
+						py = transform.position.y;
 						movingGrid = null;
 
 						Logic.control.CurrentStatus = Control.ControlStatus.ShowMenu;
-					
+
 					}
 
 				}
 			}
 		}
-		else if (Logic.control.CurrentStatus == Control.ControlStatus.Idle ||
-		         Logic.control.CurrentStatus == Control.ControlStatus.FinishAttack
-		         ){
-			Idle();
+        else{
+			if (Logic.control.CurrentStatus == Control.ControlStatus.Idle){
+				Idle();
+			}
+            else if (Logic.control.CurrentStatus == Control.ControlStatus.Finished && this == Logic.selectedPawn) {
+                StandBy();
+            }
 		}
-	
+
 	}
 
 
@@ -252,7 +271,7 @@ public class Pawn : MonoBehaviour {
 		}
 	}
 
-	public void MoveTo(TileGrid destination){	
+	public void MoveTo(TileGrid destination){
 
 		CustomAnimation.Direction d = Logic.GetDirection( gridPosition , destination);
 
@@ -276,7 +295,7 @@ public class Pawn : MonoBehaviour {
 		moving = true;
 		movingGrid = destination;
 		movingDirection = (int)d;
-	
+
 	}
 
 
@@ -286,7 +305,7 @@ public class Pawn : MonoBehaviour {
 		path = logic.FindPath( gridPosition , destination, 6);
 		logic.GridSetOccupied(destination);
 	}
-	
+
 	public void Attack(Pawn pawn){
 		faceDirection = Logic.GetDirection(gridPosition , pawn.gridPosition);
 		switch (faceDirection)
@@ -304,8 +323,48 @@ public class Pawn : MonoBehaviour {
 		}
 	}
 
+	public void Parry(Pawn pawn){
+		faceDirection = Logic.GetDirection(gridPosition , pawn.gridPosition);
+		switch (faceDirection)
+		{
+		case CustomAnimation.Direction.Down:
+			animator.Play(CustomAnimation.STATE_PARRY_DOWN);
+			break;
+		case CustomAnimation.Direction.Up:
+			animator.Play(CustomAnimation.STATE_PARRY_UP);
+			break;
+		case CustomAnimation.Direction.Left:
+		case CustomAnimation.Direction.Right:
+			animator.Play(CustomAnimation.STATE_PARRY_SIDE);
+			break;
+		}
+	}
+
+	public void Damaged(){
+        animator.Play(CustomAnimation.STATE_DAMAGED);
+	}
+
+    public void StandBy(){
+        finished = true;
+		switch (faceDirection)
+		{
+		case CustomAnimation.Direction.Down:
+			animator.Play(CustomAnimation.STATE_STAND_DOWN);
+			break;
+		case CustomAnimation.Direction.Up:
+			animator.Play(CustomAnimation.STATE_STAND_UP);
+			break;
+		case CustomAnimation.Direction.Left:
+		case CustomAnimation.Direction.Right:
+			animator.Play(CustomAnimation.STATE_STAND_SIDE);
+			break;
+		}
+        EventType type = EventType.ActionFinished;
+		Control.PushEvent( new GameEvent(EventTargetType.None , gameObject , type) );
+    }
+
 	void OnMouseDown(){
-		 
+
 	//	Canvas canvas = GameObject.Find ("MenuCanvas").GetComponent<Canvas> ();
 	//	Transform panel = canvas.transform.FindChild ("Panel");
 	//	panel.position = Input.mousePosition;
@@ -358,68 +417,68 @@ public class Pawn : MonoBehaviour {
 
 	public void ShowMoveRange(){
 		ArrayList validMove = logic.GetValidMove();
-		
+
 		foreach (TileGrid move in validMove)
 		{
 			GameObject tile = (GameObject)Instantiate(Resources.Load("TileCover"));
-			
+
 			tile.transform.position = logic.GetPositionByGrid( move.x , move.y , -98);
 
 
 			tile.GetComponent<Cover>().color = GetColorByTeam();
-		
-			
+
+
 			moveRange.Add( tile );
-			
+
 		}
 	}
 
 	public void ShowAttackRange(){
 
 		ArrayList validRange = logic.GetAttackRange();
-		
+
 		foreach (TileGrid grid in validRange)
 		{
 			GameObject tile = (GameObject)Instantiate(Resources.Load("UI/AttackFrame"));
-			
+
 			tile.transform.position = logic.GetPositionByGrid( grid.x , grid.y , -99);
 			tile.GetComponent<Cover>().color = new Color( 1.0f , 0.2f , 0.2f, 0f);
-			
+
 			attackRangeGrid.Add( tile );
-			
+
 		}
 
 		ArrayList validTarget = logic.GetValidTarget();
-		
+
 		foreach (Pawn target in validTarget)
 		{
 			GameObject tile = (GameObject)Instantiate(Resources.Load("TileCover"));
-			
+
 			tile.transform.position = logic.GetPositionByGrid( target.gridPosition.x , target.gridPosition.y , -97);
 			tile.GetComponent<Cover>().color = new Color( 1.0f , 0.2f , 0.2f, 0f);
 			tile.GetComponent<Cover>().transparency = 0.6f;
 			tile.GetComponent<BoxCollider2D>().enabled = false;
-			
+
 			attackRangeGrid.Add( tile );
-			
+
 		}
 
 	}
 
 	private AnimationClip MakeAnimationClip(CustomAnimation.AnimationType type , CustomAnimation.Direction dir , bool isWeak){
-		
+
 		AnimationClip animClip = new AnimationClip();
-		
+
 		// First you need to create e Editor Curve Binding
 		EditorCurveBinding curveBinding = new EditorCurveBinding();
-		
+
 		// I want to change the sprites of the sprite renderer, so I put the typeof(SpriteRenderer) as the binding type.
 		curveBinding.type = typeof(SpriteRenderer);
 		// Regular path to the gameobject that will be changed (empty string means root)
 		curveBinding.path = "";
 		// This is the property name to change the sprite of a sprite renderer
 		curveBinding.propertyName = "m_Sprite";
-		
+
 		// An array to hold the object keyframes
 
         AnimationData data = CustomAnimation.GetAnimationData(type, dir , isWeak);
@@ -436,7 +495,7 @@ public class Pawn : MonoBehaviour {
 			keyFrames[i] = new ObjectReferenceKeyframe();
 			keyFrames[i].time = data.keytimes[i];
 			keyFrames[i].value = sprites[ data.frames[i] ];
-			
+
 		}
 
 
@@ -444,7 +503,7 @@ public class Pawn : MonoBehaviour {
 		animClip.frameRate = 12;
 		animClip.wrapMode = WrapMode.Loop;
 
-	
+
 
 		AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings (animClip);
 		settings.loopTime = true;
@@ -454,9 +513,9 @@ public class Pawn : MonoBehaviour {
 			animClip.frameRate = 12;
 			settings.loopTime = false;
 		}
-	
+
 		AnimationUtility.SetAnimationClipSettings (animClip, settings);
-		
+
 		AnimationUtility.SetObjectReferenceCurve(animClip, curveBinding, keyFrames);
 
 		return animClip;

@@ -33,7 +33,7 @@ public class Logic : MonoBehaviour {
 		}
 
 	}
-	
+
 	public static void DeselectPawn(){
 		Logic.selectedPawn = null;
 		control.CurrentStatus = Control.ControlStatus.Idle;
@@ -53,7 +53,7 @@ public class Logic : MonoBehaviour {
 	void Start () {
 
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
 
@@ -221,17 +221,17 @@ public class Logic : MonoBehaviour {
 			path.Add(start);
 			return path;
 		}
-		
+
 		var mobility_required = CalculateMobilityReduce();
 		mobility_required[start.x , start.y] = 1;
-		
+
 		Queue q = new Queue();
 		Hashtable visited = new Hashtable();
 		Hashtable prev = new Hashtable();
 		Tuple<int , TileGrid> ele = new Tuple<int,TileGrid>(0 , selectedPawn.gridPosition);
-		
+
 		visited.Add( ele.Second.GetString() ,  true);
-		
+
 		q.Enqueue( ele );
 		bool find = false;
 		while (q.Count > 0)
@@ -275,7 +275,7 @@ public class Logic : MonoBehaviour {
 		}
 
 		return path;
-		
+
 	}
 
 	public ArrayList GetAttackRange(){
