@@ -19,14 +19,19 @@ public class MapUI : MonoBehaviour {
 	void OnMouseOver(){
 
 		if (EventSystem.current.IsPointerOverGameObject()) return;
-		if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+		if (Input.GetMouseButtonDown(0))
 		{
 			Logic.DeselectPawn();
-		}
+        }
+        else if (Input.GetMouseButtonDown(1))
+        {
+            EventType type = EventType.RightClick;
+            EventTargetType target = EventTargetType.Any;
+            Control.PushEvent(new GameEvent(target, gameObject, type));
+        }
+
 		
 	}
-
-
 
 	void OnGUI(){
 

@@ -33,7 +33,8 @@ public class Control : MonoBehaviour {
         ChooseAttackTarget ,
         Moving ,
         Attacking,
-        Finished
+        Finished,
+        Cancel
     }
 
     // Use this for initialization
@@ -60,8 +61,10 @@ public class Control : MonoBehaviour {
 
         LinkStatus(ControlStatus.ShowMenu , new GameEvent( EventTargetType.MenuItemAttack, EventType.LeftClick) , ControlStatus.ChooseAttackTarget);
         LinkStatus(ControlStatus.ShowMenu , new GameEvent( EventTargetType.MenuItemAttack, EventType.RightClick) , ControlStatus.ChooseAttackTarget);
+        LinkStatus(ControlStatus.ShowMenu , new GameEvent( EventTargetType.Any, EventType.RightClick) , ControlStatus.Cancel);
+
         LinkStatus(ControlStatus.ChooseAttackTarget , new GameEvent(EventTargetType.EnemyPawn , EventType.LeftClick) , ControlStatus.Attacking);
-        LinkStatus(ControlStatus.Attacking , new GameEvent(EventTargetType.None , EventType.AttackFinished) , ControlStatus.Idle);
+        LinkStatus(ControlStatus.Attacking , new GameEvent(EventTargetType.None , EventType.AttackFinished) , ControlStatus.Finished);
 
         LinkStatus(ControlStatus.ChooseAttackTarget , new GameEvent(EventTargetType.Any , EventType.RightClick) , ControlStatus.ShowMenu);
 
@@ -74,8 +77,15 @@ public class Control : MonoBehaviour {
 
     ControlStatus NextStatus(GameEvent evt){
 
-        if (statusList[(int)currentStatus].next.ContainsKey(evt.GetHashCode()))
-            return (ControlStatus)statusList[(int)currentStatus].next[evt.GetHashCode()];
+        //check any event type is valid
+        GameEvent anyEvent = new GameEvent(EventTargetType.Any, evt.type);
+        int eventHash = anyEvent.GetHashCode();
+        if (statusList[(int)currentStatus].next.ContainsKey(eventHash)){
+            return (ControlStatus)statusList[(int)currentStatus].next[eventHash];
+        }
+        eventHash = evt.GetHashCode();
+        if (statusList[(int)currentStatus].next.ContainsKey(eventHash))
+            return (ControlStatus)statusList[(int)currentStatus].next[eventHash];
         return currentStatus;
     }
 
@@ -136,6 +146,16 @@ public class Control : MonoBehaviour {
 					break;
                 case ControlStatus.Finished:
                     Logic.selectedPawn.StandBy();
+                    currentStatus = next;
+                    break;
+                case ControlStatus.ShowMenu:
+                    Logic.selectedPawn.DestroyAttackRange();
+                    Logic.selectedPawn.DestroyMoveRange();
+                    currentStatus = next;
+                    break;
+                case ControlStatus.Cancel:
+                    Logic.selectedPawn.CancelAction();
+                    currentStatus = ControlStatus.Idle;
                     break;
                 default:
                     currentStatus = next;

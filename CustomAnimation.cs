@@ -92,7 +92,7 @@ public static class CustomAnimation {
         for (int i = 0 ; i < 3 ; i ++){
 			standAnimationData[i] = new AnimationData();
             standAnimationData[i].keytimes = new float[1]{0.0f};
-            int offset = (i << 2);
+            int offset = (6 + i);
             standAnimationData[i].frames = new int[1]{offset};
         }
 

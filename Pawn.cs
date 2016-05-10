@@ -5,6 +5,14 @@ using System.Collections;
 
 public class Pawn : MonoBehaviour {
 
+    private Color COLOR_FINISHED = new Color(0.6f, 0.6f, 0.6f, 1);
+    private Color COLOR_NORMAL = new Color(1,1,1,1);
+    private Color COLOR_PLAYER = new Color( 0.2f , 0.2f , 1.0f, 0f);
+    private Color COLOR_FRIEND = new Color( 0.1f , 0.8f , 0.2f, 0f);
+    private Color COLOR_ENERMY = new Color( 0.8f , 0.2f , 0.2f, 0f);
+
+
+
 	public int heroID = 0;
 	public Logic.Team team;
 
@@ -16,6 +24,7 @@ public class Pawn : MonoBehaviour {
 
 	public static int zIndex = -3;
 	public TileGrid gridPosition;
+    public TileGrid originalGridPosition;
 
 	private ArrayList moveRange;
 	private ArrayList attackRange;
@@ -43,6 +52,7 @@ public class Pawn : MonoBehaviour {
 	private Animator animator;
 
 	public CustomAnimation.Direction faceDirection;
+	public CustomAnimation.Direction originalFaceDirection;
 
 	//main properties
 	public AttackType attackType;
@@ -74,6 +84,7 @@ public class Pawn : MonoBehaviour {
 	void Start () {
 
 		faceDirection = CustomAnimation.Direction.Down;
+        originalFaceDirection = faceDirection;
 
 		animator = gameObject.GetComponent<Animator> ();
 		AnimatorOverrideController temp = new AnimatorOverrideController ();
@@ -111,6 +122,7 @@ public class Pawn : MonoBehaviour {
 		logic = logicContrller.GetComponent<Logic>();
 
 		gridPosition = logic.GetGridByPosition( transform.position.x , transform.position.y);
+        originalGridPosition = new TileGrid(gridPosition.x, gridPosition.y);
 
 		attackRange = GetAttackRange(attackType);
 
@@ -189,9 +201,14 @@ public class Pawn : MonoBehaviour {
 			DestroyMoveRange();
 		}
 
+
 		if (finished){
+            gameObject.GetComponent<Renderer>().material.SetColor("_Color" , COLOR_FINISHED);
 			return;
 		}
+        else{
+            gameObject.GetComponent<Renderer>().material.SetColor("_Color" , COLOR_NORMAL);
+        }
 
 		if (Logic.control.CurrentStatus == Control.ControlStatus.Moving){
 
@@ -245,6 +262,10 @@ public class Pawn : MonoBehaviour {
 			}
 		}
         else{
+            Vector3 currentPosition = logic.GetPositionByGrid(gridPosition.x, gridPosition.y, Pawn.zIndex);
+			gameObject.transform.position = currentPosition;
+            px = currentPosition.x;
+            py = currentPosition.y;
 			if (Logic.control.CurrentStatus == Control.ControlStatus.Idle){
 				Idle();
 			}
@@ -308,6 +329,7 @@ public class Pawn : MonoBehaviour {
 
 	public void Attack(Pawn pawn){
 		faceDirection = Logic.GetDirection(gridPosition , pawn.gridPosition);
+        updatePosition();
 		switch (faceDirection)
 		{
 		case CustomAnimation.Direction.Down:
@@ -344,8 +366,15 @@ public class Pawn : MonoBehaviour {
         animator.Play(CustomAnimation.STATE_DAMAGED);
 	}
 
+    private void updatePosition() {
+        originalGridPosition.x = gridPosition.x;
+        originalGridPosition.y = gridPosition.y;
+        originalFaceDirection = faceDirection;
+    }
+
     public void StandBy(){
         finished = true;
+        updatePosition();
 		switch (faceDirection)
 		{
 		case CustomAnimation.Direction.Down:
@@ -363,7 +392,7 @@ public class Pawn : MonoBehaviour {
 		Control.PushEvent( new GameEvent(EventTargetType.None , gameObject , type) );
     }
 
-	void OnMouseDown(){
+	void OnMouseOver(){
 
 	//	Canvas canvas = GameObject.Find ("MenuCanvas").GetComponent<Canvas> ();
 	//	Transform panel = canvas.transform.FindChild ("Panel");
@@ -372,7 +401,7 @@ public class Pawn : MonoBehaviour {
 	//	canvas.enabled = true;
 
 		if (EventSystem.current.IsPointerOverGameObject()) return;
-		/*
+        /*
 		if (Logic.control.CurrentStatus == Control.ControlStatus.Idle)
 			Logic.SelectPawn (this);
 		else if (Logic.control.CurrentStatus == Control.ControlStatus.ChooseAttackTarget){
@@ -380,24 +409,25 @@ public class Pawn : MonoBehaviour {
 				Logic.selectedPawn.Attack( this );
 			}
 		}*/
-		EventType type = EventType.LeftClick;
-		if (Input.GetMouseButtonDown(1)){
-			type = EventType.RightClick;
-		}
 
-		EventTargetType target = EventTargetType.None;
-		if (team == Logic.Team.Player){
-			target = EventTargetType.PlayerPawn;
-		}
-		else if (team == Logic.Team.Friend){
-			target = EventTargetType.FriendPawn;
-		}
-		else if (team == Logic.Team.Enermy){
-			target = EventTargetType.EnemyPawn;
-		}
+        bool leftClicked = Input.GetMouseButtonDown(0);
+        bool rightClicked = Input.GetMouseButtonDown(1);
 
-		Control.PushEvent( new GameEvent(target , gameObject , type) );
-
+        if (leftClicked || rightClicked)
+        {
+            EventType type = leftClicked ? EventType.LeftClick : EventType.RightClick;
+            EventTargetType target = EventTargetType.None;
+            if (team == Logic.Team.Player){
+                target = EventTargetType.PlayerPawn;
+            }
+            else if (team == Logic.Team.Friend){
+                target = EventTargetType.FriendPawn;
+            }
+            else if (team == Logic.Team.Enermy){
+                target = EventTargetType.EnemyPawn;
+            }
+            Control.PushEvent( new GameEvent(target , gameObject , type) );
+        }
 	}
 
 	public bool IsValidTarget(Pawn pawn , Control.ActionType action){
@@ -408,11 +438,16 @@ public class Pawn : MonoBehaviour {
 	}
 
 	Color GetColorByTeam(){
-		if (team == Logic.Team.Player)
-			return new Color( 0.2f , 0.2f , 1.0f, 0f);
-		else{
-			return new Color( 0.1f , 0.8f , 0.2f, 0f);;
-		}
+        switch (team)
+        {
+            case Logic.Team.Player:
+                return COLOR_PLAYER;
+            case Logic.Team.Friend:
+                return COLOR_FRIEND;
+            case Logic.Team.Enermy:
+                return COLOR_ENERMY;
+        }
+        return COLOR_PLAYER;
 	}
 
 	public void ShowMoveRange(){
@@ -465,9 +500,24 @@ public class Pawn : MonoBehaviour {
 
 	}
 
+    public void CancelAction(){
+        logic.GridSetEmpty(gridPosition);
+        logic.GridSetOccupied(originalGridPosition);
+        gridPosition.x = originalGridPosition.x;
+        gridPosition.y = originalGridPosition.y;
+        faceDirection = originalFaceDirection;
+    }
+
 	private AnimationClip MakeAnimationClip(CustomAnimation.AnimationType type , CustomAnimation.Direction dir , bool isWeak){
 
-		AnimationClip animClip = new AnimationClip();
+
+        
+        string filePath = "HeroAnimations/" + heroID.ToString() + "_" + type.ToString() + "_" + dir.ToString();
+        AnimationClip animationClip = Resources.Load(filePath, typeof(AnimationClip)) as AnimationClip;
+        return animationClip;
+        
+
+        AnimationClip animClip = new AnimationClip();
 
 		// First you need to create e Editor Curve Binding
 		EditorCurveBinding curveBinding = new EditorCurveBinding();
@@ -518,7 +568,11 @@ public class Pawn : MonoBehaviour {
 
 		AnimationUtility.SetObjectReferenceCurve(animClip, curveBinding, keyFrames);
 
-		return animClip;
 
+        string AnimationPath = "Assets/Resources/HeroAnimations";
+        AssetDatabase.CreateAsset(animClip, AnimationPath + "/" + heroID.ToString() + "_" + type.ToString() + "_" + dir.ToString() + ".anim");
+        AssetDatabase.SaveAssets();
+
+        return animClip;
 	}
 }

@@ -27,9 +27,6 @@ public class MenuRender : MonoBehaviour {
 	}
 
 	void OnMouseOver(){
-
-
-
 	}
 
 	void BtnAttackClicked(){

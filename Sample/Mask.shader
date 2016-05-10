@@ -3,7 +3,7 @@
     Properties { 
 
 
-        _Color ("Main Color", Color) = (1,1,1,0.5) 
+        _Color ("Tint", Color) = (1,1,1,0.5) 
         _MainTex ("Texture", 2D) = "white" { } 
         _FrameNumber("Frame Number" , int) = 1
         _AlphaTex ("Texture", 2D) = "white" { } } 
